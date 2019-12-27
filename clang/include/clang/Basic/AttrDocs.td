@@ -4697,6 +4697,30 @@ once.
   }];
 }
 
+def SyntaxAttrDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``syntax`` attribute can be applied to a function definition, and it
+causes the function body to be parsed using a plugin that has registered
+itself with the parser to handle the named syntax. The syntax name is
+specified using a string argument to the attribute.
+
+The text provided to the plugin is preprocessed and it must be possible for
+Clang to find the end of the function using balanced delimieter matching
+starting with the opening curly bracket.
+
+In order to handle a named syntax, the plugin must register a handler with
+the SyntaxHandlerRegistry.
+
+.. code-block:: c++
+
+    [[clang::syntax("foo")]] void something() {
+      This text is parsed using a plugin, and so, what this function actually
+      does is determined by the plugin.
+    }
+  }];
+}
+
 def HandleDocs : DocumentationCategory<"Handle Attributes"> {
   let Content = [{
 Handles are a way to identify resources like files, sockets, and processes.

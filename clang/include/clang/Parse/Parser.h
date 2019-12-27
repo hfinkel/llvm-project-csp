@@ -32,6 +32,7 @@
 
 namespace clang {
   class PragmaHandler;
+  class SyntaxHandler;
   class Scope;
   class BalancedDelimiterTracker;
   class CorrectionCandidateCallback;
@@ -399,6 +400,9 @@ class Parser : public CodeCompletionHandler {
   /// GNU statement expression. Checks whether we are actually at the end of
   /// a statement expression and builds a suitable expression statement.
   StmtResult handleExprStmt(ExprResult E, ParsedStmtContext StmtCtx);
+
+  /// The map of custom syntax handlers from plugins.
+  llvm::StringMap<std::unique_ptr<SyntaxHandler>> SyntaxHandlers;
 
 public:
   Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
@@ -3101,6 +3105,24 @@ private:
   void CodeCompleteIncludedFile(llvm::StringRef Dir, bool IsAngled) override;
   void CodeCompleteNaturalLanguage() override;
 };
+
+/// SyntaxHandler - Instances of this interface defined to handle the various
+/// pragmas that the language front-end uses.
+class SyntaxHandler {
+  std::string Name;
+
+public:
+  SyntaxHandler() = default;
+  explicit SyntaxHandler(StringRef name) : Name(name) {}
+  virtual ~SyntaxHandler();
+
+  StringRef getName() const { return Name; }
+  virtual void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
+                            Token &FirstToken) = 0;
+};
+
+/// Registry of syntax handlers added by plugins
+using SyntaxHandlerRegistry = llvm::Registry<SyntaxHandler>;
 
 }  // end namespace clang
 
