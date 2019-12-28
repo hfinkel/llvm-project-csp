@@ -1138,6 +1138,12 @@ def note_pragma_attribute_namespace_on_attribute : Note<
   "omit the namespace to add attributes to the most-recently"
   " pushed attribute group">;
 
+// Syntax plugin.
+def err_attribute_syntax_plugin_not_found : Error<
+  "plugin for syntax %0 is not available">;
+def err_duplicate_syntax_plugin_attribute : Error<
+  "attribute %0 is already applied for a different plugin syntax">;
+
 def err_opencl_unroll_hint_on_non_loop : Error<
   "OpenCL only supports 'opencl_unroll_hint' attribute on for, while, and do statements">;
 

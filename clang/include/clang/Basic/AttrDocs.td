@@ -4703,7 +4703,7 @@ def SyntaxAttrDocs : Documentation {
 The ``syntax`` attribute can be applied to a function definition, and it
 causes the function body to be parsed using a plugin that has registered
 itself with the parser to handle the named syntax. The syntax name is
-specified using a string argument to the attribute.
+specified using an identifier argument to the attribute.
 
 The text provided to the plugin is preprocessed and it must be possible for
 Clang to find the end of the function using balanced delimieter matching
@@ -4714,7 +4714,7 @@ the SyntaxHandlerRegistry.
 
 .. code-block:: c++
 
-    [[clang::syntax("foo")]] void something() {
+    [[clang::syntax(foo)]] void something() {
       This text is parsed using a plugin, and so, what this function actually
       does is determined by the plugin.
     }

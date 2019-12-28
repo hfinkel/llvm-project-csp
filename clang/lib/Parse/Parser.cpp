@@ -1125,6 +1125,85 @@ Parser::ParseDeclarationOrFunctionDefinition(ParsedAttributesWithRange &attrs,
   }
 }
 
+void Parser::AddPluginPredefines() {
+  if (SyntaxHandlers.empty())
+    return;
+
+  // Note: This must be called before Preprocessor::EnterMainSourceFile() is
+  // called.
+
+  std::string Predefines = PP.getPredefines();
+  llvm::raw_string_ostream PredefinesOS(Predefines);
+
+  for (auto &SH : SyntaxHandlers)
+    SH.getValue()->AddToPredefines(PredefinesOS);
+
+  PP.setPredefines(Predefines);
+}
+
+void Parser::ProcessPluginSyntax(ParsingDeclarator &D) {
+  assert(Tok.isNot(tok::equal) && "Processing plugin syntax without body?");
+
+  // If this function's body should be handled (replaced) by a plugin, arrange
+  // for that now.
+
+  const ParsedAttr *SyntaxPA = nullptr;
+
+  auto SynName = [&SyntaxPA]() {
+    return SyntaxPA->getArgAsIdent(0)->Ident->getName();
+  };
+
+  for (const ParsedAttr &AL : D.getAttributes())
+    if (AL.getKind() == ParsedAttr::AT_Syntax) {
+      if (SyntaxPA &&
+          AL.getArgAsIdent(0)->Ident->getName() != SynName()) {
+        Diag(AL.getLoc(), diag::err_duplicate_syntax_plugin_attribute) << AL;
+        continue;
+      }
+
+      SyntaxPA = &AL;
+    }
+
+  if (!SyntaxPA)
+    return;
+
+  const auto &SHI = SyntaxHandlers.find(SynName());
+  if (SHI == SyntaxHandlers.end()) {
+    Diag(SyntaxPA->getLoc(),
+         diag::err_attribute_syntax_plugin_not_found) << SynName();
+    return;
+  }
+
+  // Collect the token stream until the closing right brace (but leave the
+  // closing right brace so that we can use it to indicate the end of the
+  // replacement function body).
+
+  CachedTokens Toks;
+  if (!ConsumeAndStoreUntil(tok::r_brace, Toks, /*StopAtSemi=*/false,
+                            /*ConsumeFinalToken*/false)) {
+    return;
+  }
+
+  // Provide the token stream to the plugin and get back the replacement text.
+
+  std::string Replacement;
+  llvm::raw_string_ostream ReplacementOS(Replacement);
+
+  SHI->second->GetReplacement(PP, D, Toks, ReplacementOS);
+
+  // Now we have a replacement text buffer from the plugin, enter it for
+  // lexing. After we're done with that, we'll resume parsing the original
+  // source with the closing right brace.
+
+  std::unique_ptr<llvm::MemoryBuffer> SB =
+    llvm::MemoryBuffer::getMemBufferCopy(Replacement, "<built-in>");
+  FileID FID = PP.getSourceManager().createFileID(std::move(SB));
+  assert(FID.isValid() &&
+         "Could not create FileID for plugin replacement text?");
+
+  PP.EnterSourceFile(FID, nullptr, SourceLocation());
+}
+
 /// ParseFunctionDefinition - We parsed and verified that the specified
 /// Declarator is well formed.  If this is a K&R-style function, read the
 /// parameters declaration-list, then start the compound-statement.
@@ -1188,6 +1267,8 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
     for (const ParsedAttr &AL : D.getAttributes())
       if (AL.isKnownToGCC() && !AL.isCXX11Attribute())
         Diag(AL.getLoc(), diag::warn_attribute_on_function_definition) << AL;
+
+    ProcessPluginSyntax(D);
   }
 
   // In delayed template parsing mode, for function template we consume the

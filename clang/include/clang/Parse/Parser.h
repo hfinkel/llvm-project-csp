@@ -437,6 +437,10 @@ public:
   ///
   void Initialize();
 
+  /// Add to the string of predefines in the preprocessor from the registered
+  //syntax plugins.
+  void AddPluginPredefines();
+
   /// Parse the first top-level declaration in a translation unit.
   bool ParseFirstTopLevelDecl(DeclGroupPtrTy &Result);
 
@@ -1508,6 +1512,7 @@ private:
                                                 AccessSpecifier AS);
 
   void SkipFunctionBody();
+  void ProcessPluginSyntax(ParsingDeclarator &D);
   Decl *ParseFunctionDefinition(ParsingDeclarator &D,
                  const ParsedTemplateInfo &TemplateInfo = ParsedTemplateInfo(),
                  LateParsedAttrList *LateParsedAttrs = nullptr);
@@ -3117,8 +3122,10 @@ public:
   virtual ~SyntaxHandler();
 
   StringRef getName() const { return Name; }
-  virtual void HandlePragma(Preprocessor &PP, PragmaIntroducer Introducer,
-                            Token &FirstToken) = 0;
+  virtual void GetReplacement(Preprocessor &PP, Declarator &D,
+                              CachedTokens &Toks,
+                              llvm::raw_string_ostream &OS) = 0;
+  virtual void AddToPredefines(llvm::raw_string_ostream &OS) = 0;
 };
 
 /// Registry of syntax handlers added by plugins
