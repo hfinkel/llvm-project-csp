@@ -83,6 +83,7 @@ if (CLANG_BUILD_EXAMPLES)
     AnnotateFunctions
     clang-interpreter
     PrintFunctionNames
+    PrintTokensSyntax
     )
 endif ()
 

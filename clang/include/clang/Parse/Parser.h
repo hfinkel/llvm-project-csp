@@ -3116,10 +3116,12 @@ private:
 class SyntaxHandler {
   std::string Name;
 
+  virtual void anchor();
+
 public:
   SyntaxHandler() = default;
   explicit SyntaxHandler(StringRef name) : Name(name) {}
-  virtual ~SyntaxHandler();
+  virtual ~SyntaxHandler() = default;
 
   StringRef getName() const { return Name; }
   virtual void GetReplacement(Preprocessor &PP, Declarator &D,

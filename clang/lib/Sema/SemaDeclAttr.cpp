@@ -7221,6 +7221,9 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case ParsedAttr::AT_LTOVisibilityPublic:
     handleSimpleAttribute<LTOVisibilityPublicAttr>(S, D, AL);
     break;
+  case ParsedAttr::AT_Syntax:
+    // This was handled during parsing.
+    break;
 
   // Microsoft attributes:
   case ParsedAttr::AT_EmptyBases:
