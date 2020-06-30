@@ -23,11 +23,17 @@ public:
   void GetReplacement(Preprocessor &PP, Declarator &D,
                       CachedTokens &Toks,
                       llvm::raw_string_ostream &OS) override {
+    
+    OS << "static const char* tokens = \"";
     for (auto &Tok : Toks) {
-      OS << "printf(\"%s\\n\", \"";
+      OS << " ";
       OS.write_escaped(PP.getSpelling(Tok));
-      OS << "\");\n";
     }
+    OS << "\";\n";
+    //write some functions
+    OS << "void doStuff () {\n";
+    OS << "printf(\"%s\",tokens);\n";
+    OS <<"}\n";
   }
 
   void AddToPredefines(llvm::raw_string_ostream &OS) override {

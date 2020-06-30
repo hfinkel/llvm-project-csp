@@ -1196,9 +1196,20 @@ void Parser::ProcessPluginSyntax(ParsingDeclarator &D) {
   llvm::raw_string_ostream ReplacementOS(Replacement);
 
   ReplacementOS << "\n{\n";
-  SHI->second->GetReplacement(PP, D, Toks, ReplacementOS);
   ReplacementOS << "\n}\n";
+  //  provide token stream to the plugin and get back replacement text
+  //  but place them just outside the function body been replaced
+  SHI->second->GetReplacement(PP, D, Toks, ReplacementOS);
   ReplacementOS.flush();
+  
+  //Now we change the identifier name in the declarator to forget
+  //the original function
+  
+  std::string NewName;
+  NewName ="__"+ D.getIdentifier()->getName().str();
+ 
+  IdentifierInfo &VariantII = Actions.Context.Idents.get(NewName);
+  D.SetIdentifier(&VariantII, D.getBeginLoc()); 
 
   // Now we have a replacement text buffer from the plugin, enter it for
   // lexing. After we're done with that, we'll resume parsing the original
