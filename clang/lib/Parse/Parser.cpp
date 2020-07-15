@@ -1190,20 +1190,20 @@ void Parser::ProcessPluginSyntax(ParsingDeclarator &D) {
     return;
   }
 
-  // Provide the token stream to the plugin and get back the replacement text.
 
   std::string Replacement;
   llvm::raw_string_ostream ReplacementOS(Replacement);
-
+  // Function to be forgotten left empty. Could result to warnings,
+  // possible solution is to user __builtin_unreachable();. 
   ReplacementOS << "\n{\n";
   ReplacementOS << "\n}\n";
-  //  provide token stream to the plugin and get back replacement text
-  //  but place them just outside the function body been replaced
+
+  // Provide the token stream to the plugin and get back the replacement text.
   SHI->second->GetReplacement(PP, D, Toks, ReplacementOS);
   ReplacementOS.flush();
   
-  //Now we change the identifier name in the declarator to forget
-  //the original function
+  // Change the identifier name in the declarator to forget
+  // the original function.
   
   std::string NewName;
   NewName ="__"+ D.getIdentifier()->getName().str();
