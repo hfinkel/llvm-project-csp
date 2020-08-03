@@ -25,7 +25,7 @@ using namespace clang;
 LLVM_INSTANTIATE_REGISTRY(SyntaxHandlerRegistry)
 
 void SyntaxHandler::anchor() {}
-// Utility function returning actual text for a declarrator.
+// Utility function returning actual text for a declarator.
 llvm::StringRef SyntaxHandler::getDeclText(Preprocessor &PP,Declarator &D){
   auto DeclCharRange = Lexer::getAsCharRange (D.getSourceRange(), 
 		  PP.getSourceManager(), PP.getLangOpts());
@@ -1201,7 +1201,7 @@ void Parser::ProcessPluginSyntax(ParsingDeclarator &D) {
   std::string Replacement;
   llvm::raw_string_ostream ReplacementOS(Replacement);
   ReplacementOS << "\n{\n";
-  // Place __builtin_unreachable(); in the forgotten function. This 
+  // Place __builtin_unreachable(); in the forgoten function. This 
   // is done to avoid warnings from the compiler.
   ReplacementOS << "__builtin_unreachable();\n";
   ReplacementOS << "\n}\n";
