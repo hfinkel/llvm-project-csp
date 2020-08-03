@@ -30,8 +30,8 @@ public:
       OS.write_escaped(PP.getSpelling(Tok));
     }
     OS << "\";\n";
-    //write some functions
-    OS << "void doStuff () {\n";
+    // Rewrite syntax original function.
+    OS << getDeclText(PP,D) << "{\n";
     OS << "printf(\"%s\",tokens);\n";
     OS <<"}\n";
   }

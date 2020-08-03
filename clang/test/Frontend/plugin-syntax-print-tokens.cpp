@@ -13,16 +13,19 @@
 
 //CHECK: define dso_local void @_Z5__fn1v() #0 {
 //CHECK-NEXT: entry:
-//CHECK-NEXT:  ret void
+//CHECK-NEXT:  unreachable
 //CHECK-NEXT: }
 
 
-//CHECK: define dso_local void @_Z7doStuffv() #1 {
+
+//CHECK: define dso_local void @_Z3fn1v() #1 {
 //CHECK-NEXT: entry:
-//CHECK-NEXT:  %0 = load i8*, i8** @_ZL6tokens, align 8
-//CHECK-NEXT:  %call = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str, i64 0, i64 0), i8* %0)
-//CHECK-NEXT:  ret void
+//CHECK-NEXT:   %0 = load i8*, i8** @_ZL6tokens, align 8
+//CHECK-NEXT:   %call = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str, i64 0, i64 0), i8* %0)
+//CHECK-NEXT:   ret void
 //CHECK-NEXT: }
+
+
 
 
 

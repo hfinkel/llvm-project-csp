@@ -25,7 +25,14 @@ using namespace clang;
 LLVM_INSTANTIATE_REGISTRY(SyntaxHandlerRegistry)
 
 void SyntaxHandler::anchor() {}
-
+// Utility function returning actual text for a declarrator.
+llvm::StringRef SyntaxHandler::getDeclText(Preprocessor &PP,Declarator &D){
+  auto DeclCharRange = Lexer::getAsCharRange (D.getSourceRange(), 
+		  PP.getSourceManager(), PP.getLangOpts());
+  auto DeclText= Lexer::getSourceText (DeclCharRange,
+		  PP.getSourceManager(), PP.getLangOpts());
+  return DeclText;
+}
 namespace {
 /// A comment handler that passes comments found by the preprocessor
 /// to the parser action.
@@ -1193,9 +1200,10 @@ void Parser::ProcessPluginSyntax(ParsingDeclarator &D) {
 
   std::string Replacement;
   llvm::raw_string_ostream ReplacementOS(Replacement);
-  // Function to be forgotten left empty. Could result to warnings,
-  // possible solution is to user __builtin_unreachable();. 
   ReplacementOS << "\n{\n";
+  // Place __builtin_unreachable(); in the forgotten function. This 
+  // is done to avoid warnings from the compiler.
+  ReplacementOS << "__builtin_unreachable();\n";
   ReplacementOS << "\n}\n";
 
   // Provide the token stream to the plugin and get back the replacement text.
