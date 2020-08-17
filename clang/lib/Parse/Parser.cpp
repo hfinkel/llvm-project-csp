@@ -25,7 +25,14 @@ using namespace clang;
 LLVM_INSTANTIATE_REGISTRY(SyntaxHandlerRegistry)
 
 void SyntaxHandler::anchor() {}
-
+// Utility function returning actual text for a declarator.
+llvm::StringRef SyntaxHandler::getDeclText(Preprocessor &PP,Declarator &D){
+  auto DeclCharRange = Lexer::getAsCharRange (D.getSourceRange(), 
+		  PP.getSourceManager(), PP.getLangOpts());
+  auto DeclText= Lexer::getSourceText (DeclCharRange,
+		  PP.getSourceManager(), PP.getLangOpts());
+  return DeclText;
+}
 namespace {
 /// A comment handler that passes comments found by the preprocessor
 /// to the parser action.
@@ -1190,15 +1197,27 @@ void Parser::ProcessPluginSyntax(ParsingDeclarator &D) {
     return;
   }
 
-  // Provide the token stream to the plugin and get back the replacement text.
 
   std::string Replacement;
   llvm::raw_string_ostream ReplacementOS(Replacement);
-
   ReplacementOS << "\n{\n";
-  SHI->second->GetReplacement(PP, D, Toks, ReplacementOS);
+  // Place __builtin_unreachable(); in the forgoten function. This 
+  // is done to avoid warnings from the compiler.
+  ReplacementOS << "__builtin_unreachable();\n";
   ReplacementOS << "\n}\n";
+
+  // Provide the token stream to the plugin and get back the replacement text.
+  SHI->second->GetReplacement(PP, D, Toks, ReplacementOS);
   ReplacementOS.flush();
+  
+  // Change the identifier name in the declarator to forget
+  // the original function.
+  
+  std::string NewName;
+  NewName ="__"+ D.getIdentifier()->getName().str();
+ 
+  IdentifierInfo &VariantII = Actions.Context.Idents.get(NewName);
+  D.SetIdentifier(&VariantII, D.getBeginLoc()); 
 
   // Now we have a replacement text buffer from the plugin, enter it for
   // lexing. After we're done with that, we'll resume parsing the original
